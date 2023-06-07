@@ -1,75 +1,77 @@
+import 'package:flutter_emoji/emoji.dart';
 import 'package:test/test.dart';
 import 'package:flutter_emoji/flutter_emoji.dart';
 
 void main() {
   var emojiParser = EmojiParser();
-  var emojiCoffee = Emoji('coffee', '☕');
-  var emojiHeart = Emoji('heart', '❤️');
+  var emojiFlagMalaysia = Emoji('flag_malaysia', '🇲🇾');
+  var emojiHeart = Emoji('red_heart', '❤️');
   var emojiFlagUS = Emoji('flag-us', '🇺🇸'); // "flag-us":"🇺🇸"
 
   test('EmojiUtil.stripColons()', () {
-    expect(EmojiUtil.stripColons('coffee'), 'coffee');
+    expect(EmojiUtil.stripColons('flag_malaysia'), 'flag_malaysia');
     expect(
-        EmojiUtil.stripColons('coffee', (error) {
+        EmojiUtil.stripColons('flag_malaysia', (error) {
           expect(error, EmojiMessage.errorMalformedEmojiName);
         }),
-        'coffee');
-    expect(EmojiUtil.stripColons(':coffee:', (error) {}), 'coffee');
-    expect(EmojiUtil.stripColons(':coff ee:'), ':coff ee:');
+        'flag_malaysia');
+    expect(
+        EmojiUtil.stripColons(':flag_malaysia:', (error) {}), 'flag_malaysia');
+    expect(EmojiUtil.stripColons(':flag malaysia:'), ':flag malaysia:');
     expect(EmojiUtil.stripColons(':grey_question:'), 'grey_question');
     expect(EmojiUtil.stripColons('grey_question:'), 'grey_question:');
     expect(EmojiUtil.stripColons(':e-mail:'), 'e-mail');
   });
 
   test('EmojiUtil.ensureColons()', () {
-    expect(EmojiUtil.ensureColons('coffee'), ':coffee:');
-    expect(EmojiUtil.ensureColons(':coffee'), ':coffee:');
-    expect(EmojiUtil.ensureColons('coffee:'), ':coffee:');
-    expect(EmojiUtil.ensureColons(':coffee:'), ':coffee:');
+    expect(EmojiUtil.ensureColons('flag_malaysia'), ':flag_malaysia:');
+    expect(EmojiUtil.ensureColons(':flag_malaysia'), ':flag_malaysia:');
+    expect(EmojiUtil.ensureColons('flag_malaysia:'), ':flag_malaysia:');
+    expect(EmojiUtil.ensureColons(':flag_malaysia:'), ':flag_malaysia:');
   });
 
   test('EmojiUtil.stripNSM()', () {
-    expect(EmojiUtil.stripNSM(String.fromCharCodes(Runes('\u2764\ufe0f'))),
+    expect(EmojiUtil.normalizeName(String.fromCharCodes(Runes('\u2764\ufe0f'))),
         String.fromCharCodes(Runes('\u2764')));
-    expect(EmojiUtil.stripNSM(String.fromCharCodes(Runes('\u2764'))),
+    expect(EmojiUtil.normalizeName(String.fromCharCodes(Runes('\u2764'))),
         String.fromCharCodes(Runes('\u2764')));
   });
 
   test('emoji creation & equality', () {
-    var coffee = Emoji('coffee', '☕');
+    var coffee = Emoji('flag_malaysia', '🇲🇾');
 
-    expect(emojiCoffee == coffee, true);
+    expect(emojiFlagMalaysia == coffee, true);
 
-    expect(coffee.name == 'coffee', true);
-    expect(coffee.full == ':coffee:', true);
-    expect(coffee.code == '☕', true);
+    expect(coffee.name == 'flag_malaysia', true);
+    expect(coffee.full == ':flag_malaysia:', true);
+    expect(coffee.code == '🇲🇾', true);
 
-    expect(emojiCoffee.toString(),
-        'Emoji{name="coffee", full=":coffee:", code="☕"}');
+    expect(emojiFlagMalaysia.toString(),
+        'Emoji{name="flag_malaysia", full=":flag_malaysia:", code="🇲🇾"}');
 
-    expect(emojiCoffee.toString() == coffee.toString(), true);
+    expect(emojiFlagMalaysia.toString() == coffee.toString(), true);
   });
 
   test('emoji clone', () {
-    var coffee = emojiCoffee.clone();
+    var coffee = emojiFlagMalaysia.clone();
 
-    expect(coffee == emojiCoffee, true);
+    expect(coffee == emojiFlagMalaysia, true);
   });
 
   test('get', () {
-    expect(emojiParser.get('coffee'), emojiCoffee);
-    expect(emojiParser.get(':coffee:'), emojiCoffee);
+    expect(emojiParser.get('flag_malaysia'), '🇲🇾');
+    expect(emojiParser.get(':flag_malaysia:'), '🇲🇾');
 
     expect(emojiParser.get('does_not_exist'), Emoji.None);
     expect(emojiParser.get(':does_not_exist:'), Emoji.None);
   });
 
   test('emoji name', () {
-    expect(emojiParser.hasName('coffee'), true);
-    expect(emojiParser.getName('coffee'), emojiCoffee);
+    expect(emojiParser.hasName('flag_malaysia'), true);
+    expect(emojiParser.getName('flag_malaysia'), '🇲🇾');
 
-    expect(emojiParser.hasName(':coffee:'), true);
-    expect(emojiParser.getName(':coffee:'), emojiCoffee);
+    expect(emojiParser.hasName(':flag_malaysia:'), true);
+    expect(emojiParser.getName(':flag_malaysia:'), '🇲🇾');
 
     expect(emojiParser.hasName('flag-us'), true);
     expect(emojiParser.getName('flag-us'), emojiFlagUS);
@@ -79,10 +81,10 @@ void main() {
   });
 
   test('emoji info', () {
-    var heart = emojiParser.info('heart');
+    var heart = emojiParser.info('red_heart');
 
-    expect(heart.name, 'heart');
-    expect(heart.full, ':heart:');
+    expect(heart.name, 'red_heart');
+    expect(heart.full, ':red_heart:');
     expect(heart.code, '❤️');
   });
 
@@ -107,22 +109,22 @@ void main() {
     //     'I ❤️‍🔥 Flutter so much');
 
     expect(
-        emojiParser.emojify('I :+1: with him', fnFormat: (code) {
+        emojiParser.emojify('I :thumbs_up: with him', fnFormat: (code) {
           return 'totally ' + code;
         }),
         'I totally 👍 with him');
   });
 
   test('unemojify a text', () {
-    expect(emojiParser.unemojify('I ❤️ car'), 'I :heart: car');
-    expect(emojiParser.unemojify('I ❤️ ☕'), 'I :heart: :coffee:');
+    expect(emojiParser.unemojify('I ❤️ car'), 'I :red_heart: car');
+    expect(emojiParser.unemojify('I ❤️ ☕'), 'I :red_heart: :hot_beverage:');
 
-    expect(emojiParser.unemojify('I heart car'), 'I heart car');
-    expect(emojiParser.unemojify('I :heart: car'), 'I :heart: car');
+    expect(emojiParser.unemojify('I red_heart car'), 'I red_heart car');
+    expect(emojiParser.unemojify('I :red_heart: car'), 'I :red_heart: car');
 
     // NOTE: both :+1: and :thumbsup: represent same emoji 👍
     // When calling unemojify() only the latter one is mapped.
-    expect(emojiParser.unemojify('I 👍 with him'), 'I :thumbsup: with him');
+    expect(emojiParser.unemojify('I 👍 with him'), 'I :thumbs_up: with him');
 
     expect(emojiParser.unemojify('I ❤️‍🔥 Flutter so much'),
         'I :heart_on_fire: Flutter so much');
@@ -136,12 +138,12 @@ void main() {
     expect(emojiParser.get('umbrella_with_rain_drops'), emoji);
 
     // "male-scientist":"👨‍🔬"
-    emoji = Emoji('male-scientist', '👨‍🔬');
-    expect(emojiParser.get('male-scientist'), emoji);
+    emoji = Emoji('man_scientist', '👨‍🔬');
+    expect(emojiParser.get('man_scientist'), emoji);
 
     // "+1":"👍"
-    emoji = Emoji('+1', '👍');
-    expect(emojiParser.get('+1'), emoji);
+    emoji = Emoji('thumbs_up', '👍');
+    expect(emojiParser.get('thumbs_up'), emoji);
   });
 
   test('count emojis', () {
@@ -169,33 +171,19 @@ void main() {
   });
 
   test('parse Emojis', () {
-    var equalList = (var list1, var list2) {
-      if (!(list1 is List && list2 is List) || list1.length != list2.length) {
-        return false;
-      }
-
-      for (int i = 0; i < list1.length; i++) {
-        if (list1[i] != list2[i]) {
-          return false;
-        }
-      }
-
-      return true;
-    };
-
     expect(emojiParser.parseEmojis(''), []);
     expect(emojiParser.parseEmojis('I ❤️ Flutter just like ☕'), ['❤️', '☕']);
   });
 
   test('initServerData', () async {
     var parser = EmojiParser(init: false);
-    expect(parser.hasName('coffee'), false);
-    expect(parser.getName('coffee'), Emoji.None);
+    expect(parser.hasName('flag_malaysia'), false);
+    expect(parser.getName('flag_malaysia'), Emoji.None);
     expect(parser.parseEmojis('I ❤️ Flutter just like ☕'), []);
 
     await parser.initServerData();
-    expect(parser.hasName('coffee'), true);
-    expect(parser.getName('coffee'), emojiCoffee);
+    expect(parser.hasName('flag_malaysia'), true);
+    expect(parser.getName('flag_malaysia'), emojiFlagMalaysia);
     expect(parser.parseEmojis('I ❤️ Flutter just like ☕'), ['❤️', '☕']);
   });
 }

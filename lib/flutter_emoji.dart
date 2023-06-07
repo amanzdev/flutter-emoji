@@ -1,15 +1,18 @@
 library flutter_emoji;
 
 import 'dart:convert';
+import 'dart:developer';
 
 import 'package:characters/characters.dart';
+import 'package:flutter_emoji/data.dart';
+import 'package:flutter_emoji/emoji.dart';
 import 'package:http/http.dart' as http;
 
 ///
 /// Constants defined for Emoji.
 ///
 class EmojiConst {
-  static final String charNonSpacingMark = String.fromCharCode(0xfe0f);
+  static final String charNonSpacingMark = String.fromCharCode(65039);
   static final String charColon = ':';
   static final String charEmpty = '';
 }
@@ -48,6 +51,9 @@ class EmojiUtil {
   ///
   static String ensureColons(String name) {
     var res = name;
+
+    if (name.length == 0) return res;
+
     if ('${name[0]}' != EmojiConst.charColon) {
       res = EmojiConst.charColon + name;
     }
@@ -63,45 +69,9 @@ class EmojiUtil {
   /// When processing emojis, we don't need to store the graphical byte
   /// which is 0xfe0f, or so-called 'Non-Spacing Mark'.
   ///
-  static String? stripNSM(String? name) => name?.replaceAll(
+  static String? normalizeName(String? name) => name?.replaceAll(
       RegExp(EmojiConst.charNonSpacingMark), EmojiConst.charEmpty);
-}
-
-///
-/// The representation of an emoji.
-/// There are three properties availables:
-///   - 'name' : the emoji name (no colon)
-///   - 'full' : the full emoji name. It is name with colons on both sides.
-///   - 'code' : the actual graphic presentation of emoji.
-///
-/// Emoji.None is being used to represent a NULL emoji.
-///
-class Emoji {
-  ///
-  /// If emoji not found, the parser always returns this.
-  ///
-  static final Emoji None = Emoji(EmojiConst.charEmpty, EmojiConst.charEmpty);
-
-  final String name;
-  final String code;
-
-  Emoji(this.name, this.code);
-
-  String get full => EmojiUtil.ensureColons(name);
-
-  @override
-  bool operator ==(other) {
-    return other is Emoji && name == other.name && code == other.code;
-  }
-
-  Emoji clone() {
-    return Emoji(name, code);
-  }
-
-  @override
-  String toString() {
-    return 'Emoji{name="$name", full="$full", code="$code"}';
-  }
+  static String? normalizeCode(String? name) => stripColons(name);
 }
 
 ///
@@ -127,29 +97,30 @@ class EmojiParser {
   final Map<String, Emoji> _emojisByName = <String, Emoji>{};
   final Map<String?, Emoji> _emojisByCode = <String, Emoji>{};
 
-  EmojiParser({bool init: true}) {
+  EmojiParser({bool init = true}) {
     if (init == true) {
       initLocalData();
     }
   }
   void initLocalData() {
-    _init(JSON_EMOJI);
+    _init(EmojiData.EMOJI_JSON);
   }
 
   Future<void> initServerData() async {
-    final response = await http.get(Uri.parse(EMOJI_SOURCE));
+    final response = await http.get(Uri.parse(EmojiData.EMOJI_SRC));
     _init(response.body);
   }
 
   void _init(String dataset) {
     Map<String, dynamic> mapEmojis = jsonDecode(dataset);
     mapEmojis.forEach((k, v) {
-      _emojisByName[v] = Emoji(v[0], k);
-      _emojisByCode[EmojiUtil.stripNSM(k)] = Emoji(v[0], k);
+      _emojisByName[v['slug']] = Emoji(v['slug'], k);
+      _emojisByCode[EmojiUtil.normalizeName(k)] = Emoji(v['slug'], k);
     });
   }
 
-  Emoji get(String? name) => _emojisByName[EmojiUtil.stripColons(name)] ?? Emoji.None;
+  Emoji get(String? name) =>
+      _emojisByName[EmojiUtil.stripColons(name)] ?? Emoji.None;
 
   Emoji getName(String? name) => get(name);
   bool hasName(String name) =>
@@ -182,11 +153,11 @@ class EmojiParser {
   /// Returns Emoji.None if not found.
   ///
   Emoji getEmoji(String? emoji) {
-    return _emojisByCode[EmojiUtil.stripNSM(emoji)] ?? Emoji.None;
+    return _emojisByCode[EmojiUtil.normalizeName(emoji)] ?? Emoji.None;
   }
 
   bool hasEmoji(String? emoji) {
-    return _emojisByCode.containsKey(EmojiUtil.stripNSM(emoji));
+    return _emojisByCode.containsKey(EmojiUtil.normalizeName(emoji));
   }
 
   ///
