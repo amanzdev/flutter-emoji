@@ -1,6 +1,6 @@
 name: flutter_emoji
 description: "👉 A light-weight Emoji 📦 for Flutter with all up-to-date emojis 😄. Made from 💯% ☕ with ❤️!"
-version: 2.4.0
+version: 3.0.0
 homepage: "https://github.com/petehouston/flutter-emoji"
 
 environment:
@@ -8,8 +8,8 @@ environment:
 
 dependencies:
   characters: ^1.2.0
-  http: ^0.13.4
+  http: ^1.0.0
 
 dev_dependencies:
-  lint: ^1.0.0
+  lint: ^2.1.2
   test: ^1.20.1
